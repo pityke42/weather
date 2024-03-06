@@ -1,12 +1,17 @@
 package org.example;
+import org.json.simple.JSONObject;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 public class WeatherGUI extends JFrame{
+    private JSONObject weatherData;
     public WeatherGUI(){
         //title
         super("Weather Application");
@@ -28,13 +33,6 @@ public class WeatherGUI extends JFrame{
         //font style and size
         searchField.setFont(new Font("Dialog", Font.PLAIN, 24));
         add(searchField);
-        //search button
-        JButton searchButton = new JButton(loadImage("src/assets/search.png"));
-
-        //cursor, button hovering
-        searchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        searchButton.setBounds(375, 13,47,45);
-        add(searchButton);
 
         //weather image
         JLabel weatherConditionImage = new JLabel(loadImage("src/assets/cloudy.png"));
@@ -75,6 +73,67 @@ public class WeatherGUI extends JFrame{
         windspeedTxt.setFont(new Font("Dialog",Font.PLAIN,14));
         add(windspeedTxt);
 
+        //search button
+        JButton searchButton = new JButton(loadImage("src/assets/search.png"));
+
+        //cursor, button hovering
+        searchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        searchButton.setBounds(375, 13,47,45);
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //get location
+                String userInput = searchField.getText();
+
+                //input validating, removing whitespaces
+                if(userInput.replaceAll("\\s","").length() <= 0){
+                    return;
+                }
+
+                //retrieve weather data
+                weatherData = WeatherData.getWeatherData(userInput);
+
+                //update gui
+
+                //update weather img
+                String weatherCondition = (String) weatherData.get("weather_code");
+
+                //render img corresponding weather data
+                switch (weatherCondition) {
+                    case "Clear":
+                        weatherConditionImage.setIcon(loadImage("src/assets/clear.png"));
+                        break;
+                    case "Cloudy":
+                        weatherConditionImage.setIcon(loadImage("src/assets/cloudy.png"));
+                        break;
+                    case "Snow":
+                        weatherConditionImage.setIcon(loadImage("src/assets/snow.png"));
+                        break;
+                    case "Rain":
+                        weatherConditionImage.setIcon(loadImage("src/assets/rain.png"));
+                        break;
+                    }
+
+
+
+
+                //updating temperature text
+                double temperature = (double) weatherData.get("temperature");
+                temperatureText.setText(temperature + " C");
+
+                //update weather condition text
+                weatherCondDesc.setText(weatherCondition);
+
+                //update humidity
+                long humidity = (long) weatherData.get("humidity");
+                humidityTxt.setText("<html><b>Humidity</b " + humidity + "%</html>");
+
+                //update windspeed
+                long windspeed = (long) weatherData.get("windspeed");
+                windspeedTxt.setText("<html><b>Windspeed</b> " + windspeed + "km/h</html>");
+            }
+        });
+        add(searchButton);
     }
     //create images in gui components
     private ImageIcon loadImage(String sourcePath){
